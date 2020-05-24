@@ -7,7 +7,27 @@ import { ElectronService } from '../../../core/services/electron/electron.servic
 import { transform } from '../../utils/error';
 import { TranslateService } from '@ngx-translate/core';
 import { UIService } from '../../../core/services/ui/ui.service';
-import { validPort, validPortForForm } from '../../utils/validPort';
+import { validPort } from '../../utils/validPort';
+import { debounceTime, distinctUntilChanged, switchMap, first, } from "rxjs/operators";
+import { from, of } from "rxjs";
+import { toIntTen } from '../../utils/typeutil.ts';
+
+function validatePortAvailbility(ctrl: AbstractControl): Observable<null | ValidationErrors> {
+  if (!ctrl.valueChanges) {
+    return of(null)
+  } else {
+    return ctrl.valueChanges.pipe(
+      // debounceTime(300),
+      // 只能用switchMap,不能用map,详见https://rxjs-cn.github.io/learn-rxjs-operators/operators/transformation/switchmap.html
+      switchMap((value: any): Observable<ValidationErrors | null> => {
+        const num = toIntTen(value);
+        const validPromise = validPort(num);
+        return from(validPromise.then(valid => valid ? null : { PORT_HAS_BEEN_USED: false }))
+      }),
+      first()
+    );
+  }
+}
 
 @Component({
   selector: 'app-setting',
@@ -32,7 +52,11 @@ export class SettingComponent implements OnInit {
       'autoSave': new FormControl(this.data.autoSave),
       'initAndLoad': new FormControl(this.data.initAndLoad),
       'loadHistoryAppData': new FormControl(this.data.loadHistoryAppData),
-      'defaultServerPort': new FormControl(this.data.defaultServerPort, [Validators.required, Validators.min(1025), Validators.max(32768)], validPortForForm),
+      'defaultServerPort': new FormControl(
+        this.data.defaultServerPort,
+        [Validators.required, Validators.min(1025), Validators.max(32768)],
+        validatePortAvailbility
+      ),
       'defaultLayout': new FormControl(this.data.defaultLayout, [Validators.required])
     });
   }
@@ -51,5 +75,4 @@ export class SettingComponent implements OnInit {
       })
     }
   }
-
 }

@@ -30,7 +30,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { OverlayModule, OverlayContainer, FullscreenOverlayContainer } from '@angular/cdk/overlay';
 import { ToastrModule } from 'ngx-toastr';
-import { NgCircleProgressModule } from 'ng-circle-progress';
 
 import { PageNotFoundComponent } from './components/';
 import { HeaderComponent } from './components/header/header.component';
